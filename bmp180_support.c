@@ -1,10 +1,10 @@
 /*
 ****************************************************************************
-* Copyright (C) 2014 Bosch Sensortec GmbH
+* Copyright (C) 2014 - 2015 Bosch Sensortec GmbH
 *
 * bmp180_support.c
-* Date: 2014/12/12
-* Revision: 1.0.3 $
+* Date: 2015/03/27
+* Revision: 1.0.4 $
 *
 * Usage: Sensor Driver support file for BMP180
 *
@@ -111,8 +111,8 @@ s32 bmp180_data_readout_template(void)
 {
  /* result of communication results*/
 	s32 com_rslt = E_BMP_COMM_RES;
-	u16 v_uncomp_temp_u16 = C_BMP180_ZERO_U8X;
-	u32 v_uncomp_press_u32 = C_BMP180_ZERO_U8X;
+	u16 v_uncomp_temp_u16 = BMP180_INIT_VALUE;
+	u32 v_uncomp_press_u32 = BMP180_INIT_VALUE;
 /*********************** START INITIALIZATION ************************/
     /**************Call the I2C init routine ***************/
 	#ifdef BMP180_API
@@ -136,17 +136,17 @@ s32 bmp180_data_readout_template(void)
 	/*  This function used to read the calibration values of following
 	 *	these values are used to calculate the true pressure and temperature
 	 *	Parameter		MSB		LSB		bit
-	 *		AC1			0xAA	0xAB	C_BMP180_ZERO_U8X to 7
-	 *		AC2			0xAC	0xAD	C_BMP180_ZERO_U8X to 7
-	 *		AC3			0xAE	0xAF	C_BMP180_ZERO_U8X to 7
-	 *		AC4			0xB0	0xB1	C_BMP180_ZERO_U8X to 7
-	 *		AC5			0xB2	0xB3	C_BMP180_ZERO_U8X to 7
-	 *		AC6			0xB4	0xB5	C_BMP180_ZERO_U8X to 7
-	 *		B1			0xB6	0xB7	C_BMP180_ZERO_U8X to 7
-	 *		B2			0xB8	0xB9	C_BMP180_ZERO_U8X to 7
-	 *		MB			0xBA	0xBB	C_BMP180_ZERO_U8X to 7
-	 *		MC			0xBC	0xBD	C_BMP180_ZERO_U8X to 7
-	 *		MD			0xBE	0xBF	C_BMP180_ZERO_U8X to 7*/
+	 *		AC1			0xAA	0xAB	BMP180_INIT_VALUE to 7
+	 *		AC2			0xAC	0xAD	BMP180_INIT_VALUE to 7
+	 *		AC3			0xAE	0xAF	BMP180_INIT_VALUE to 7
+	 *		AC4			0xB0	0xB1	BMP180_INIT_VALUE to 7
+	 *		AC5			0xB2	0xB3	BMP180_INIT_VALUE to 7
+	 *		AC6			0xB4	0xB5	BMP180_INIT_VALUE to 7
+	 *		B1			0xB6	0xB7	BMP180_INIT_VALUE to 7
+	 *		B2			0xB8	0xB9	BMP180_INIT_VALUE to 7
+	 *		MB			0xBA	0xBB	BMP180_INIT_VALUE to 7
+	 *		MC			0xBC	0xBD	BMP180_INIT_VALUE to 7
+	 *		MD			0xBE	0xBF	BMP180_INIT_VALUE to 7*/
 	com_rslt += bmp180_get_calib_param();
 /*------------------------------------------------------------------*
 ************************* END CALIPRATION ********
@@ -204,7 +204,7 @@ s8 I2C_routine(void) {
 	bmp180.dev_addr = BMP180_I2C_ADDR;
 	bmp180.delay_msec = BMP180_delay_msek;
 
-	return C_BMP180_ZERO_U8X;
+	return BMP180_INIT_VALUE;
 }
 
 /************** I2C buffer length ******/
@@ -226,11 +226,11 @@ s8 I2C_routine(void) {
  */
 s8 BMP180_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt)
 {
-	s32 iError = C_BMP180_ZERO_U8X;
+	s32 iError = BMP180_INIT_VALUE;
 	u8 array[I2C_BUFFER_LEN];
-	u8 stringpos = C_BMP180_ZERO_U8X;
-	array[C_BMP180_ZERO_U8X] = reg_addr;
-	for (stringpos = C_BMP180_ZERO_U8X; stringpos < cnt; stringpos++) {
+	u8 stringpos = BMP180_INIT_VALUE;
+	array[BMP180_INIT_VALUE] = reg_addr;
+	for (stringpos = BMP180_INIT_VALUE; stringpos < cnt; stringpos++) {
 		array[stringpos + C_BMP180_ONE_U8X] = *(reg_data + stringpos);
 	}
 	/*
@@ -240,7 +240,7 @@ s8 BMP180_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt)
 	* add your I2C write function here
 	* iError is an return value of I2C read function
 	* Please select your valid return value
-	* In the driver SUCCESS defined as C_BMP180_ZERO_U8X
+	* In the driver SUCCESS defined as BMP180_INIT_VALUE
     * and FAILURE defined as -C_BMP180_ONE_U8X
 	* Note :
 	* This is a full duplex operation,
@@ -260,20 +260,20 @@ s8 BMP180_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt)
  */
 s8 BMP180_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt)
 {
-	s32 iError = C_BMP180_ZERO_U8X;
-	u8 array[I2C_BUFFER_LEN] = {C_BMP180_ZERO_U8X};
-	u8 stringpos = C_BMP180_ZERO_U8X;
-	array[C_BMP180_ZERO_U8X] = reg_addr;
+	s32 iError = BMP180_INIT_VALUE;
+	u8 array[I2C_BUFFER_LEN] = {BMP180_INIT_VALUE};
+	u8 stringpos = BMP180_INIT_VALUE;
+	array[BMP180_INIT_VALUE] = reg_addr;
 	/* Please take the below function as your reference
 	 * for read the data using I2C communication
 	 * add your I2C rad function here.
 	 * "IERROR = I2C_WRITE_READ_STRING(DEV_ADDR, ARRAY, ARRAY, C_BMP180_ONE_U8X, CNT)"
 	 * iError is an return value of SPI write function
 	 * Please select your valid return value
-	 * In the driver SUCCESS defined as C_BMP180_ZERO_U8X
+	 * In the driver SUCCESS defined as BMP180_INIT_VALUE
      * and FAILURE defined as -C_BMP180_ONE_U8X
 	 */
-	for (stringpos = C_BMP180_ZERO_U8X; stringpos < cnt; stringpos++) {
+	for (stringpos = BMP180_INIT_VALUE; stringpos < cnt; stringpos++) {
 		*(reg_data + stringpos) = array[stringpos];
 	}
 	return (s8)iError;

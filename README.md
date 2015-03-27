@@ -17,9 +17,9 @@ INTRODUCTION
 VERSION
 =========
 	- Version of bmp180 sensor driver is:
-		* bmp180.c 		- V2.0.2
-		* bmp180.h 		- V2.2.1
-		* bmp180_support.c 	- V1.0.3
+		* bmp180.c 		- V2.0.3
+		* bmp180.h 		- V2.2.2
+		* bmp180_support.c 	- V1.0.4
 
 INTEGRATION DETAILS
 =====================
@@ -53,6 +53,6 @@ SUPPORTED SENSOR INTERFACE
 
 COPYRIGHT
 ===========
-	- Copyright (C) 2008 - 2014 Bosch Sensortec GmbH
+	- Copyright (C) 2008 - 2015 Bosch Sensortec GmbH
 
 

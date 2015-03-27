@@ -1,10 +1,10 @@
 /*
 ****************************************************************************
-* Copyright (C) 2008 - 2014 Bosch Sensortec GmbH
+* Copyright (C) 2008 - 2015 Bosch Sensortec GmbH
 *
 * bmp180.c
-* Date: 2014/12/12
-* Revision: 2.0.2 $
+* Date: 2015/03/27
+* Revision: 2.0.3 $
 *
 * Usage: Sensor Driver file for BMP180
 *
@@ -81,27 +81,27 @@ BMP180_RETURN_FUNCTION_TYPE bmp180_init(struct bmp180_t *bmp180)
 {
 	/* used to return the bus communication results*/
 	BMP180_RETURN_FUNCTION_TYPE v_com_rslt_s8 = E_BMP_COMM_RES;
-	u8 v_data_u8 = C_BMP180_ZERO_U8X;
+	u8 v_data_u8 = BMP180_INIT_VALUE;
 	/* assign BMP180 ptr */
 	p_bmp180 = bmp180;
 	/* read Chip Id */
 	v_com_rslt_s8 = p_bmp180->BMP180_BUS_READ_FUNC(
 	p_bmp180->dev_addr, BMP180_CHIP_ID__REG,
-	&v_data_u8, C_BMP180_ONE_U8X);
+	&v_data_u8, BMP180_GEN_READ_WRITE_DATA_LENGTH);
 	p_bmp180->chip_id = BMP180_GET_BITSLICE(v_data_u8, BMP180_CHIP_ID);
-	p_bmp180->number_of_samples = C_BMP180_ONE_U8X;
-	p_bmp180->oversamp_setting = C_BMP180_ZERO_U8X;
-	p_bmp180->sw_oversamp = C_BMP180_ZERO_U8X;
+	p_bmp180->number_of_samples = BMP180_INITIALIZE_NUMBER_OF_SAMPLES_U8X;
+	p_bmp180->oversamp_setting = BMP180_INITIALIZE_OVERSAMP_SETTING_U8X;
+	p_bmp180->sw_oversamp = BMP180_INITIALIZE_SW_OVERSAMP_U8X;
 	v_com_rslt_s8 += p_bmp180->BMP180_BUS_READ_FUNC(
 	p_bmp180->dev_addr, BMP180_VERSION_REG,
-	&v_data_u8, C_BMP180_ONE_U8X);
+	&v_data_u8, BMP180_GEN_READ_WRITE_DATA_LENGTH);
 	/* read Version reg */
 
 	p_bmp180->ml_version = BMP180_GET_BITSLICE(
 	v_data_u8, BMP180_ML_VERSION);/* get ML Version */
 	p_bmp180->al_version = BMP180_GET_BITSLICE(
 	v_data_u8, BMP180_AL_VERSION); /* get AL Version */
-	bmp180_get_calib_param();
+	v_com_rslt_s8 += bmp180_get_calib_param();
 
 	return v_com_rslt_s8;
 }
@@ -135,53 +135,72 @@ BMP180_RETURN_FUNCTION_TYPE bmp180_get_calib_param(void)
 	/* used to return the bus communication results*/
 	BMP180_RETURN_FUNCTION_TYPE v_com_rslt_s8 = E_BMP_COMM_RES;
 	/* Array holding the calibration informations*/
-	u8 a_data_u8r[ARRAY_SIZE_TWENTY_TWO] = {
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X,
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X};
+	u8 a_data_u8r[BMP180_CALIB_DATA_SIZE] = {
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE};
 	/* read calibration data*/
 	v_com_rslt_s8 = p_bmp180->BMP180_BUS_READ_FUNC(
 	p_bmp180->dev_addr, BMP180_PROM_START__ADDR,
 	a_data_u8r, BMP180_PROM_DATA__LEN);
 
 	/*parameters AC1-AC6*/
-	p_bmp180->calib_param.ac1 =  (s16)((((s32)((s8)a_data_u8r[INDEX_ZERO]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_ONE]);
-	p_bmp180->calib_param.ac2 =  (s16)((((s32)((s8)a_data_u8r[INDEX_TWO]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_THREE]);
-	p_bmp180->calib_param.ac3 =  (s16)((((s32)((s8)a_data_u8r[INDEX_FOUR]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_FIVE]);
-	p_bmp180->calib_param.ac4 =  (u16)((((u32)((u8)a_data_u8r[INDEX_SIX]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_SEVEN]);
-	p_bmp180->calib_param.ac5 =  (u16)((((u32)((u8)a_data_u8r[INDEX_EIGHT]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_NINE]);
-	p_bmp180->calib_param.ac6 =  (u16)((((u32)((u8)a_data_u8r[INDEX_TEN]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_ELEVEN]);
+	p_bmp180->calib_param.ac1 =
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_AC1_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC1_LSB]);
+	p_bmp180->calib_param.ac2 =
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_AC2_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC2_LSB]);
+	p_bmp180->calib_param.ac3 =
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_AC3_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC3_LSB]);
+	p_bmp180->calib_param.ac4 =
+	(u16)((((u32)((u8)a_data_u8r[BMP180_CALIB_PARAM_AC4_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC4_LSB]);
+	p_bmp180->calib_param.ac5 =
+	(u16)((((u32)((u8)a_data_u8r[BMP180_CALIB_PARAM_AC5_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC5_LSB]);
+	p_bmp180->calib_param.ac6 =
+	(u16)((((u32)((u8)a_data_u8r[BMP180_CALIB_PARAM_AC6_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_AC6_LSB]);
 
 	/*parameters B1,B2*/
-	p_bmp180->calib_param.b1 =  (s16)((((s32)((s8)a_data_u8r[INDEX_TWELVE]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_THIRTEEN]);
+	p_bmp180->calib_param.b1 =
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_B1_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS) |
+	a_data_u8r[BMP180_CALIB_PARAM_B1_LSB]);
 	p_bmp180->calib_param.b2 =
-	(s16)((((s32)((s8)a_data_u8r[INDEX_FOURTEEN]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_FIVETEEN]);
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_B2_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_B2_LSB]);
 
 	/*parameters MB,MC,MD*/
 	p_bmp180->calib_param.mb =
-	(s16)((((s32)((s8)a_data_u8r[INDEX_SIXTEEN]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_SEVENTEEN]);
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_MB_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_MB_LSB]);
 	p_bmp180->calib_param.mc =
-	(s16)((((s32)((s8)a_data_u8r[INDEX_EIGHTEEN]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_NINETEEN]);
-	p_bmp180->calib_param.md =  (s16)((((s32)((s8)a_data_u8r[INDEX_TWENTY]))
-	<< BMP180_SHIFT_8_POSITION) | a_data_u8r[INDEX_TWENTY_ONE]);
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_MC_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_MC_LSB]);
+	p_bmp180->calib_param.md =
+	(s16)((((s32)((s8)a_data_u8r[BMP180_CALIB_PARAM_MD_MSB]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| a_data_u8r[BMP180_CALIB_PARAM_MD_LSB]);
 	return v_com_rslt_s8;
 }
 /*!
@@ -198,23 +217,25 @@ BMP180_RETURN_FUNCTION_TYPE bmp180_get_calib_param(void)
 */
 s16 bmp180_get_temperature(u32 v_uncomp_temperature_u32)
 {
-	s16 v_temperature_s16 = C_BMP180_ZERO_U8X;
-	s32 v_x1_s32, v_x2_s32 = C_BMP180_ZERO_U8X;
+	s16 v_temperature_s16 = BMP180_INIT_VALUE;
+	s32 v_x1_s32, v_x2_s32 = BMP180_INIT_VALUE;
 	/* calculate temperature*/
 	v_x1_s32 = (((s32) v_uncomp_temperature_u32 -
 	(s32) p_bmp180->calib_param.ac6) *
-	(s32) p_bmp180->calib_param.ac5) >> BMP180_SHIFT_15_POSITION;
-	if (v_x1_s32 == C_BMP180_ZERO_U8X && p_bmp180->calib_param.md
-	== C_BMP180_ZERO_U8X) {
-		return C_BMP180_ZERO_U8X;
-	} else {
-		v_x2_s32 = ((s32) p_bmp180->calib_param.mc
-		<< BMP180_SHIFT_11_POSITION) /
-		(v_x1_s32 + p_bmp180->calib_param.md);
-	}
+	(s32) p_bmp180->calib_param.ac5)
+	>> BMP180_SHIFT_BIT_POSITION_BY_15_BITS;
+	if (v_x1_s32 == BMP180_CHECK_DIVISOR && p_bmp180->calib_param.md
+	== BMP180_CHECK_DIVISOR)
+		return BMP180_INVALID_DATA;
+	/* executed only the divisor is not zero*/
+	v_x2_s32 = ((s32) p_bmp180->calib_param.mc
+	<< BMP180_SHIFT_BIT_POSITION_BY_11_BITS) /
+	(v_x1_s32 + p_bmp180->calib_param.md);
+
 	p_bmp180->param_b5 = v_x1_s32 + v_x2_s32;
-	v_temperature_s16 = ((p_bmp180->param_b5 + C_BMP180_EIGHT_U8X)
-	>> BMP180_SHIFT_4_POSITION);
+	v_temperature_s16 = ((p_bmp180->param_b5 +
+	BMP180_CALCULATE_TRUE_TEMPERATURE)
+	>> BMP180_SHIFT_BIT_POSITION_BY_04_BITS);
 
 	return v_temperature_s16;
 }
@@ -231,64 +252,63 @@ s16 bmp180_get_temperature(u32 v_uncomp_temperature_u32)
 s32 bmp180_get_pressure(u32 v_uncomp_pressure_u32)
 {
 	s32 v_pressure_s32, v_x1_s32, v_x2_s32,
-	v_x3_s32, v_b3_s32, v_b6_s32 = C_BMP180_ZERO_U8X;
-	u32 v_b4_u32, v_b7_u32 = C_BMP180_ZERO_U8X;
+	v_x3_s32, v_b3_s32, v_b6_s32 = BMP180_INIT_VALUE;
+	u32 v_b4_u32, v_b7_u32 = BMP180_INIT_VALUE;
 
-	v_b6_s32 = p_bmp180->param_b5 - BMP180_PRESSURE_4_0_0_0_DATA;
+		v_b6_s32 = p_bmp180->param_b5 - 4000;
 	/*****calculate B3************/
-	v_x1_s32 = (v_b6_s32*v_b6_s32) >> BMP180_SHIFT_12_POSITION;
+	v_x1_s32 = (v_b6_s32*v_b6_s32)
+	>> BMP180_SHIFT_BIT_POSITION_BY_12_BITS;
 	v_x1_s32 *= p_bmp180->calib_param.b2;
-	v_x1_s32 >>= BMP180_SHIFT_11_POSITION;
+	v_x1_s32 >>= BMP180_SHIFT_BIT_POSITION_BY_11_BITS;
 
 	v_x2_s32 = (p_bmp180->calib_param.ac2*v_b6_s32);
-	v_x2_s32 >>= BMP180_SHIFT_11_POSITION;
+	v_x2_s32 >>= BMP180_SHIFT_BIT_POSITION_BY_11_BITS;
 
 	v_x3_s32 = v_x1_s32 + v_x2_s32;
-	v_b3_s32 = (((((s32)p_bmp180->calib_param.ac1)
-	* C_BMP180_FOUR_U8X + v_x3_s32) <<
-	p_bmp180->oversamp_setting) + C_BMP180_TWO_U8X)
-	>> BMP180_SHIFT_2_POSITION;
+	v_b3_s32 = (((((s32)p_bmp180->calib_param.ac1)*4 + v_x3_s32) <<
+	p_bmp180->oversamp_setting) + 2)
+	>> BMP180_SHIFT_BIT_POSITION_BY_02_BITS;
 
 	/*****calculate B4************/
 	v_x1_s32 = (p_bmp180->calib_param.ac3 * v_b6_s32)
-	>> BMP180_SHIFT_13_POSITION;
+	>> BMP180_SHIFT_BIT_POSITION_BY_13_BITS;
 	v_x2_s32 = (p_bmp180->calib_param.b1 *
-	((v_b6_s32 * v_b6_s32) >> BMP180_SHIFT_12_POSITION))
-	>> BMP180_SHIFT_16_POSITION;
-	v_x3_s32 = ((v_x1_s32 + v_x2_s32) +
-	C_BMP180_TWO_U8X) >> BMP180_SHIFT_2_POSITION;
+	((v_b6_s32 * v_b6_s32) >> BMP180_SHIFT_BIT_POSITION_BY_12_BITS))
+	>> BMP180_SHIFT_BIT_POSITION_BY_16_BITS;
+	v_x3_s32 = ((v_x1_s32 + v_x2_s32) + 2)
+	>> BMP180_SHIFT_BIT_POSITION_BY_02_BITS;
 	v_b4_u32 = (p_bmp180->calib_param.ac4 * (u32)
-	(v_x3_s32 + BMP180_PRESSURE_3_2_7_6_8_DATA))
-	>> BMP180_SHIFT_15_POSITION;
+	(v_x3_s32 + 32768)) >> BMP180_SHIFT_BIT_POSITION_BY_15_BITS;
 
 	v_b7_u32 = ((u32)(v_uncomp_pressure_u32 - v_b3_s32) *
-	(BMP180_PRESSURE_5_0_0_0_0_DATA
-	>> p_bmp180->oversamp_setting));
-	if (v_b7_u32 < BMP180_PRESSURE_HEX_8_0_0_0_0_0_0_0_DATA) {
-		if (v_b4_u32 != C_BMP180_ZERO_U8X)
+	(50000 >> p_bmp180->oversamp_setting));
+	if (v_b7_u32 < 0x80000000) {
+		if (v_b4_u32 != BMP180_CHECK_DIVISOR)
 			v_pressure_s32 =
-			(v_b7_u32 << BMP180_SHIFT_1_POSITION) / v_b4_u32;
+			(v_b7_u32
+			<< BMP180_SHIFT_BIT_POSITION_BY_01_BIT) / v_b4_u32;
 		 else
-			return C_BMP180_ZERO_U8X;
+			return BMP180_INVALID_DATA;
 	} else {
-		if (v_b4_u32 != C_BMP180_ZERO_U8X)
+		if (v_b4_u32 != BMP180_CHECK_DIVISOR)
 			v_pressure_s32 = (v_b7_u32 / v_b4_u32)
-			<< BMP180_SHIFT_1_POSITION;
+			<< BMP180_SHIFT_BIT_POSITION_BY_01_BIT;
 		else
-			return C_BMP180_ZERO_U8X;
+			return BMP180_INVALID_DATA;
 	}
 
-		v_x1_s32 = v_pressure_s32 >> BMP180_SHIFT_8_POSITION;
+		v_x1_s32 = v_pressure_s32
+		>> BMP180_SHIFT_BIT_POSITION_BY_08_BITS;
 		v_x1_s32 *= v_x1_s32;
 		v_x1_s32 =
 		(v_x1_s32 * BMP180_PARAM_MG)
-		>> BMP180_SHIFT_16_POSITION;
+		>> BMP180_SHIFT_BIT_POSITION_BY_16_BITS;
 		v_x2_s32 = (v_pressure_s32 * BMP180_PARAM_MH)
-		>> BMP180_SHIFT_16_POSITION;
+		>> BMP180_SHIFT_BIT_POSITION_BY_16_BITS;
 		/*pressure in Pa*/
-		v_pressure_s32 += (v_x1_s32 +
-		v_x2_s32 + BMP180_PARAM_MI)
-		>> BMP180_SHIFT_4_POSITION;
+		v_pressure_s32 += (v_x1_s32 + v_x2_s32 + BMP180_PARAM_MI)
+		>> BMP180_SHIFT_BIT_POSITION_BY_04_BITS;
 	return v_pressure_s32;
 }
 /*!
@@ -304,29 +324,32 @@ s32 bmp180_get_pressure(u32 v_uncomp_pressure_u32)
  *
  *
 */
-u16 bmp180_get_uncomp_temperature()
+u16 bmp180_get_uncomp_temperature(void)
 {
-	u16 v_ut_u16 = C_BMP180_ZERO_U8X;
+	u16 v_ut_u16 = BMP180_INIT_VALUE;
 	/* Array holding the temperature LSB and MSB data*/
-	u8 v_data_u8[ARRAY_SIZE_TWO] = {
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X};
-	u8 v_ctrl_reg_data_u8 = C_BMP180_ZERO_U8X;
+	u8 v_data_u8[BMP180_TEMPERATURE_DATA_BYTES] = {
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE};
+	u8 v_ctrl_reg_data_u8 = BMP180_INIT_VALUE;
 	/* used to return the bus communication results*/
 	BMP180_RETURN_FUNCTION_TYPE v_com_rslt_s8 = E_BMP_COMM_RES;
-	u8 v_wait_time_u8 = C_BMP180_ZERO_U8X;
+	u8 v_wait_time_u8 = BMP180_INIT_VALUE;
 
 	v_ctrl_reg_data_u8 = BMP180_T_MEASURE;
 	v_wait_time_u8 = BMP180_TEMP_CONVERSION_TIME;
 
 	v_com_rslt_s8 = p_bmp180->BMP180_BUS_WRITE_FUNC(p_bmp180->dev_addr,
 	BMP180_CTRL_MEAS_REG,
-	&v_ctrl_reg_data_u8, C_BMP180_ONE_U8X);
+	&v_ctrl_reg_data_u8, BMP180_GEN_READ_WRITE_DATA_LENGTH);
 	p_bmp180->delay_msec(v_wait_time_u8);
 	v_com_rslt_s8 +=
 	p_bmp180->BMP180_BUS_READ_FUNC(p_bmp180->dev_addr,
-	BMP180_ADC_OUT_MSB_REG, v_data_u8, C_BMP180_TWO_U8X);
-	v_ut_u16 = (u16)((((s32)((s8)v_data_u8[LSB_ZERO]))
-	<< BMP180_SHIFT_8_POSITION) | (v_data_u8[MSB_ONE]));
+	BMP180_ADC_OUT_MSB_REG, v_data_u8,
+	BMP180_TEMPERATURE_DATA_LENGTH);
+	v_ut_u16 = (u16)((((s32)
+	((s8)v_data_u8[BMP180_TEMPERATURE_MSB_DATA]))
+	<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS)
+	| (v_data_u8[BMP180_TEMPERATURE_LSB_DATA]));
 	return v_ut_u16;
 }
 /*!
@@ -342,75 +365,81 @@ u16 bmp180_get_uncomp_temperature()
  *	@retval -1 -> Error
  *
 */
-u32 bmp180_get_uncomp_pressure()
+u32 bmp180_get_uncomp_pressure(void)
 {
 	/*j included for loop*/
-	u8 v_j_u8 = C_BMP180_ZERO_U8X;
-	u32 v_up_u32 = C_BMP180_ZERO_U8X;
+	u8 v_j_u8 = BMP180_INIT_VALUE;
+	u32 v_up_u32 = BMP180_INIT_VALUE;
 	/*get the calculated pressure data*/
-	u32 v_sum_u32 = C_BMP180_ZERO_U8X;
-	u8 v_data_u8[ARRAY_SIZE_THREE] = {
-	C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X, C_BMP180_ZERO_U8X};
-	u8 v_ctrl_reg_data_u8 = C_BMP180_ZERO_U8X;
+	u32 v_sum_u32 = BMP180_INIT_VALUE;
+	u8 v_data_u8[BMP180_PRESSURE_DATA_BYTES] = {
+	BMP180_INIT_VALUE,
+	BMP180_INIT_VALUE, BMP180_INIT_VALUE};
+	u8 v_ctrl_reg_data_u8 = BMP180_INIT_VALUE;
 	/* used to return the bus communication results*/
 	BMP180_RETURN_FUNCTION_TYPE v_com_rslt_s8 = E_BMP_COMM_RES;
 
-	if (p_bmp180->sw_oversamp == C_BMP180_ONE_U8X &&
-	p_bmp180->oversamp_setting == C_BMP180_THREE_U8X) {
-		for (v_j_u8 = C_BMP180_ZERO_U8X;
-		v_j_u8 < C_BMP180_THREE_U8X; v_j_u8++) {
+	if (p_bmp180->sw_oversamp == BMP180_SW_OVERSAMP_U8X &&
+	p_bmp180->oversamp_setting == BMP180_OVERSAMP_SETTING_U8X) {
+		for (v_j_u8 = BMP180_INIT_VALUE;
+		v_j_u8 < BMP180_DATA_MEASURE; v_j_u8++) {
 			/* 3 times getting pressure data*/
 			v_ctrl_reg_data_u8 = BMP180_P_MEASURE +
 			(p_bmp180->oversamp_setting
-			<< BMP180_SHIFT_6_POSITION);
+			<< BMP180_SHIFT_BIT_POSITION_BY_06_BITS);
 			v_com_rslt_s8 = p_bmp180->BMP180_BUS_WRITE_FUNC(
 			p_bmp180->dev_addr,
 			BMP180_CTRL_MEAS_REG,
-			&v_ctrl_reg_data_u8, C_BMP180_ONE_U8X);
-			p_bmp180->delay_msec(C_BMP180_TWO_U8X + (
-			C_BMP180_THREE_U8X <<
+			&v_ctrl_reg_data_u8, BMP180_GEN_READ_WRITE_DATA_LENGTH);
+			p_bmp180->delay_msec(BMP180_2MS_DELAY_U8X + (
+			BMP180_3MS_DELAY_U8X <<
 			(p_bmp180->oversamp_setting)));
 			v_com_rslt_s8 +=
 			p_bmp180->BMP180_BUS_READ_FUNC(
 			p_bmp180->dev_addr,
 			BMP180_ADC_OUT_MSB_REG,
-			v_data_u8, C_BMP180_THREE_U8X);
-			v_sum_u32 = (u32)((((u32) v_data_u8[INDEX_ZERO]
-			<< BMP180_SHIFT_16_POSITION) |
-			((u32) v_data_u8[INDEX_ONE]
-			<< BMP180_SHIFT_8_POSITION) |
-			(u32) v_data_u8[INDEX_TWO]) >>
-			(C_BMP180_EIGHT_U8X -
+			v_data_u8, BMP180_PRESSURE_DATA_LENGTH);
+			v_sum_u32 = (u32)((((u32)
+			v_data_u8[BMP180_PRESSURE_MSB_DATA]
+			<< BMP180_SHIFT_BIT_POSITION_BY_16_BITS) |
+			((u32) v_data_u8[BMP180_PRESSURE_LSB_DATA]
+			<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS) |
+			(u32) v_data_u8[BMP180_PRESSURE_XLSB_DATA]) >>
+			(BMP180_CALCULATE_TRUE_PRESSURE -
 			p_bmp180->oversamp_setting));
-			p_bmp180->number_of_samples = C_BMP180_ONE_U8X;
+			p_bmp180->number_of_samples =
+			BMP180_INITIALIZE_NUMBER_OF_SAMPLES_U8X;
 
 			v_up_u32 = v_up_u32 + v_sum_u32;
 			/*add up with dummy var*/
 		}
-		v_up_u32 = v_up_u32 / C_BMP180_THREE_U8X; /*averaging*/
+		v_up_u32 = v_up_u32 / BMP180_AVERAGE_U8X; /*averaging*/
 	} else {
-		if (p_bmp180->sw_oversamp == C_BMP180_ZERO_U8X) {
+		if (p_bmp180->sw_oversamp ==
+		BMP180_INITIALIZE_SW_OVERSAMP_U8X) {
 			v_ctrl_reg_data_u8 = BMP180_P_MEASURE +
 			(p_bmp180->oversamp_setting
-			<< BMP180_SHIFT_6_POSITION);
+			<< BMP180_SHIFT_BIT_POSITION_BY_06_BITS);
 			v_com_rslt_s8 = p_bmp180->BMP180_BUS_WRITE_FUNC(
 			p_bmp180->dev_addr, BMP180_CTRL_MEAS_REG,
-			&v_ctrl_reg_data_u8, C_BMP180_ONE_U8X);
-			p_bmp180->delay_msec(C_BMP180_TWO_U8X
-			+ (C_BMP180_THREE_U8X <<
+			&v_ctrl_reg_data_u8, BMP180_GEN_READ_WRITE_DATA_LENGTH);
+			p_bmp180->delay_msec(BMP180_2MS_DELAY_U8X
+			+ (BMP180_3MS_DELAY_U8X <<
 			(p_bmp180->oversamp_setting)));
 			v_com_rslt_s8 += p_bmp180->BMP180_BUS_READ_FUNC(
 			p_bmp180->dev_addr,
 			BMP180_ADC_OUT_MSB_REG,
-			v_data_u8, C_BMP180_THREE_U8X);
-			v_up_u32 = (u32)((((u32) v_data_u8[INDEX_ZERO]
-			<< BMP180_SHIFT_16_POSITION) | (
-			(u32) v_data_u8[INDEX_ONE]
-			<< BMP180_SHIFT_8_POSITION) |
-			(u32) v_data_u8[INDEX_TWO]) >>
-			(C_BMP180_EIGHT_U8X -
+			v_data_u8, BMP180_PRESSURE_DATA_LENGTH);
+			v_up_u32 = (u32)((((u32)
+			v_data_u8[BMP180_PRESSURE_MSB_DATA]
+			<< BMP180_SHIFT_BIT_POSITION_BY_16_BITS) | (
+			(u32) v_data_u8[BMP180_PRESSURE_LSB_DATA]
+			<< BMP180_SHIFT_BIT_POSITION_BY_08_BITS) |
+			(u32) v_data_u8[BMP180_PRESSURE_XLSB_DATA]) >>
+			(BMP180_CALCULATE_TRUE_PRESSURE -
 			p_bmp180->oversamp_setting));
-			p_bmp180->number_of_samples = C_BMP180_ONE_U8X;
+			p_bmp180->number_of_samples =
+			BMP180_INITIALIZE_NUMBER_OF_SAMPLES_U8X;
 		}
 
 	}
