@@ -3,8 +3,8 @@
 * Copyright (C) 2014 - 2015 Bosch Sensortec GmbH
 *
 * bmp180_support.c
-* Date: 2015/03/27
-* Revision: 1.0.4 $
+* Date: 2015/07/16
+* Revision: 1.0.5 $
 *
 * Usage: Sensor Driver support file for BMP180
 *
@@ -136,17 +136,17 @@ s32 bmp180_data_readout_template(void)
 	/*  This function used to read the calibration values of following
 	 *	these values are used to calculate the true pressure and temperature
 	 *	Parameter		MSB		LSB		bit
-	 *		AC1			0xAA	0xAB	BMP180_INIT_VALUE to 7
-	 *		AC2			0xAC	0xAD	BMP180_INIT_VALUE to 7
-	 *		AC3			0xAE	0xAF	BMP180_INIT_VALUE to 7
-	 *		AC4			0xB0	0xB1	BMP180_INIT_VALUE to 7
-	 *		AC5			0xB2	0xB3	BMP180_INIT_VALUE to 7
-	 *		AC6			0xB4	0xB5	BMP180_INIT_VALUE to 7
-	 *		B1			0xB6	0xB7	BMP180_INIT_VALUE to 7
-	 *		B2			0xB8	0xB9	BMP180_INIT_VALUE to 7
-	 *		MB			0xBA	0xBB	BMP180_INIT_VALUE to 7
-	 *		MC			0xBC	0xBD	BMP180_INIT_VALUE to 7
-	 *		MD			0xBE	0xBF	BMP180_INIT_VALUE to 7*/
+	 *		AC1			0xAA	0xAB	0 to 7
+	 *		AC2			0xAC	0xAD	0 to 7
+	 *		AC3			0xAE	0xAF	0 to 7
+	 *		AC4			0xB0	0xB1	0 to 7
+	 *		AC5			0xB2	0xB3	0 to 7
+	 *		AC6			0xB4	0xB5	0 to 7
+	 *		B1			0xB6	0xB7	0 to 7
+	 *		B2			0xB8	0xB9	0 to 7
+	 *		MB			0xBA	0xBB	0 to 7
+	 *		MC			0xBC	0xBD	0 to 7
+	 *		MD			0xBE	0xBF	0 to 7*/
 	com_rslt += bmp180_get_calib_param();
 /*------------------------------------------------------------------*
 ************************* END CALIPRATION ********
