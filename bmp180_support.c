@@ -131,7 +131,7 @@ s32 bmp180_data_readout_template(void)
     /************************* END INITIALIZATION *************************/
 
     /*------------------------------------------------------------------*
-     ************************* START CALIPRATION ********
+     ************************* START CALIBRATION ********
      *---------------------------------------------------------------------*/
 
     /*  This function used to read the calibration values of following
